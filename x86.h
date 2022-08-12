@@ -11,7 +11,17 @@ inb(ushort port)
 
 static inline void
 insl(int port, void *addr, int cnt)
-{
+{ 
+  // cld 清除方向标志，使偏移量addr正向移动
+  // rep 表示反复执行下面指令cx次
+  // insl指令表示从dx寄存器指定的端口一次读取4个字节到edi寄存器指明的起始地址
+  // 然后改变edi和cx寄存器的值
+  // 第二行说明输出变量，括号外面是约束，描述括号内的c变量如何绑定到那个寄存器
+  // 这里即将edi寄存器的值保存为c变量addr， cx寄存器中的值保存为cnt
+  // 第三行说明输入变量，同输出变量，这里port保存在dx寄存器中
+  // "0"等数字约束表示和输出变量使用同样的寄存器
+  // 第四行说明破坏性说明，告诉编译器这些值可能被破坏，编译器机会提前保护
+  // memory表示内存，cc表示eflags寄存器
   asm volatile("cld; rep insl" :
                "=D" (addr), "=c" (cnt) :
                "d" (port), "0" (addr), "1" (cnt) :

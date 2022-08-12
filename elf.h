@@ -1,23 +1,23 @@
 // Format of an ELF executable file
-
+// elf文件主要包括三个部分，包括ELF文件头、程序头表、节头表
 #define ELF_MAGIC 0x464C457FU  // "\x7FELF" in little endian
 
 // File header
 struct elfhdr {
-  uint magic;  // must equal ELF_MAGIC
+  uint magic;  // 魔数，用于文件鉴定
   uchar elf[12];
   ushort type;
   ushort machine;
   uint version;
-  uint entry;
-  uint phoff;
-  uint shoff;
+  uint entry; // 程序入口地址
+  uint phoff; // 程序头表的偏移地址
+  uint shoff;  // 节头表的偏移地址
   uint flags;
-  ushort ehsize;
-  ushort phentsize;
-  ushort phnum;
-  ushort shentsize;
-  ushort shnum;
+  ushort ehsize;  // elf头的大小
+  ushort phentsize; // 程序头表项的大小
+  ushort phnum;  // 程序头表项的数量
+  ushort shentsize; // 节头表项的大小
+  ushort shnum; // 节头表项的数量
   ushort shstrndx;
 };
 
