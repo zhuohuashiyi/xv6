@@ -49,9 +49,11 @@ outsl(int port, const void *addr, int cnt)
                "cc");
 }
 
+
 static inline void
 stosb(void *addr, int data, int cnt)
 {
+  // stosb指令将ax寄存器中的值写入到edi寄存器中的值指向的物理地址，并且改变edi寄存器的值
   asm volatile("cld; rep stosb" :
                "=D" (addr), "=c" (cnt) :
                "0" (addr), "1" (cnt), "a" (data) :

@@ -95,8 +95,8 @@ allocproc(void)
   return 0;
 
 found:
-  p->state = EMBRYO;
-  p->pid = nextpid++;
+  p->state = EMBRYO; // 设置进程状态为新生
+  p->pid = nextpid++; // 设置进程的pid
 
   release(&ptable.lock);
 
@@ -106,19 +106,21 @@ found:
     p->state = UNUSED;
     return 0;
   }
-  sp = p->kstack + KSTACKSIZE;
+  sp = p->kstack + KSTACKSIZE; // 堆栈是往下生长的，所以为该进程分配的栈大小为4kb
 
   // Leave room for trap frame.
   sp -= sizeof *p->tf;
-  p->tf = (struct trapframe*)sp;
+  p->tf = (struct trapframe*)sp; // trap frame 是往上生长的
 
   // Set up new context to start executing at forkret,
   // which returns to trapret.
+  
   sp -= 4;
-  *(uint*)sp = (uint)trapret;
-
+  *(uint*)sp = (uint)trapret;  
+   // 内核栈在最上面空出四个字节，接下来的一段空间保存context
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
+  // memeset函数将p->context往上的一段空间的值置零，该函数通常用来初始化新分配的内存空间
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
@@ -133,14 +135,15 @@ userinit(void)
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
-  p = allocproc();
+  p = allocproc(); // 在进程块表中分配一个空闲的进程块并完成相关设置
   
   initproc = p;
-  if((p->pgdir = setupkvm()) == 0)
+  if((p->pgdir = setupkvm()) == 0) // 为新进程p设置页目录
     panic("userinit: out of memory?");
-  inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
-  p->sz = PGSIZE;
-  memset(p->tf, 0, sizeof(*p->tf));
+  inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);// 初始化页目录
+  p->sz = PGSIZE; // 设置p进程使用的页大小为4kb
+  memset(p->tf, 0, sizeof(*p->tf)); // 初始化进程 trap frame分配到的内存空间
+  // 初始化p->tf
   p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
   p->tf->ds = (SEG_UDATA << 3) | DPL_USER;
   p->tf->es = p->tf->ds;
@@ -148,7 +151,7 @@ userinit(void)
   p->tf->eflags = FL_IF;
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
-
+  // safestrcpy同strcpy,设置p->name的值，但其保证不中断
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
@@ -158,7 +161,7 @@ userinit(void)
   // because the assignment might not be atomic.
   acquire(&ptable.lock);
 
-  p->state = RUNNABLE;
+  p->state = RUNNABLE;  // 设置p的状态为就绪
 
   release(&ptable.lock);
 }
@@ -342,7 +345,7 @@ scheduler(void)
   struct cpu *c = mycpu();
   c->proc = 0;
   
-  for(;;){
+  for(;;){ // 无限循环
     // 开启本处理器上的中断
     sti();
 
@@ -357,13 +360,13 @@ scheduler(void)
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
-      // 当前p指向的进程成为新的运行进程
+      // 设置p进程为本cpu的运行进程
       c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
+      switchuvm(p); // 切换页目录表等
+      p->state = RUNNING; // 设置进程p的状态为运行
       // 调用汇编程序进行进程切换
       swtch(&(c->scheduler), p->context);
-      switchkvm();
+      switchkvm(); // 换回页目录表等
       // 此事选定的进程运行
       // 当该进程返回的时候，其自己应该改变自己状态
       // Process is done running for now.

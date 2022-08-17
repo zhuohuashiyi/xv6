@@ -15,7 +15,7 @@ bootmain(void)
 {
   struct elfhdr *elf;
   struct proghdr *ph, *eph;
-  void (*entry)(void);  
+  void (*entry)(void);  // 声明一个无参数无返回值的函数指针
   uchar* pa;
  // elf文件的header(对应结构体elfhdr)加载在内存地址0x10000（在Makefile文件中定义）处
   elf = (struct elfhdr*)0x10000;  
@@ -31,11 +31,12 @@ bootmain(void)
   // 加载内核中的每一个程序段
   // ph表示每一个程序头表的起始地址
   ph = (struct proghdr*)((uchar*)elf + elf->phoff);
-  eph = ph + elf->phnum; // 表示程序头表的末尾地址
-  for(; ph < eph; ph++){
-    pa = (uchar*)ph->paddr;
+  eph = ph + elf->phnum; // eph表示程序头表的末尾地址
+  for(; ph < eph; ph++){ // ph遍历程序头表的每一项
+    pa = (uchar*)ph->paddr;   // pa则表示该段在内存中的物理地址
     readseg(pa, ph->filesz, ph->off);
     if(ph->memsz > ph->filesz)
+    // stosb在这里将0填充到该section在内存中多余的地址
       stosb(pa + ph->filesz, 0, ph->memsz - ph->filesz);
   }
 

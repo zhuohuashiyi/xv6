@@ -24,11 +24,11 @@ struct elfhdr {
 // Program section header
 struct proghdr {
   uint type;
-  uint off;
-  uint vaddr;
-  uint paddr;
-  uint filesz;
-  uint memsz;
+  uint off; // off表示本section在文件中和第一个section的起始地址的偏移
+  uint vaddr; // 在内存中的虚拟地址
+  uint paddr; // 在内存中的物理地址
+  uint filesz; // section的文件映像的大小
+  uint memsz; // section的内存映像的大小
   uint flags;
   uint align;
 };
